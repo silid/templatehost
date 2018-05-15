@@ -52,7 +52,8 @@ package se.svt.caspar.templateHost
 	import se.svt.caspar.templateHost.externalCommands.SetDataCommand;
 	import se.svt.caspar.templateHost.externalCommands.StopCommand;
 	import se.svt.caspar.Version;
-	import utils.string.htmlEncode;
+	import utils.string.xmlEncode;
+	import utils.xml.isValidXML;
 
 	/**
 	 * ...
@@ -157,7 +158,10 @@ package se.svt.caspar.templateHost
 		{
 			//_legacyHost.Add(layer, templateName, playOnLoad, invoke, xmlData);
 			onCommandReceived("@Add@" + layer);
-			xmlData = jsonToXml(xmlData);
+			if (!isValidXML(xmlData))
+			{
+				xmlData = jsonToXml(xmlData);
+			}
 			_externalCommandsBuffer.addCommand(new AddCommand(layer, templateName, invoke, new XML(xmlData), new TemplateContext(_communicationManager, layer), this));
 			if (playOnLoad)
 			{
@@ -744,7 +748,7 @@ package se.svt.caspar.templateHost
 		private function jsonToXml(data:String):String
 		{
 			try {
-				var obj:Object = JSON.parse(data);
+				var obj:Object = JSON.parse(/{.*}/gs.exec(data));
 			}
 			catch (e:Error) 
 			{
@@ -752,7 +756,7 @@ package se.svt.caspar.templateHost
 			}
 			var xmlData:String = "<templateData>";
 			for (var key:* in obj) {
-				xmlData += "<componentData id=\"" + htmlEncode(key) +"\"><data id=\"text\" value=\"" + htmlEncode(obj[key]) + "\" /></componentData>";
+				xmlData += "<componentData id=\"" + xmlEncode(key) +"\"><data id=\"text\" value=\"" + xmlEncode(obj[key]) + "\" /></componentData>";
 			}
 			xmlData += "</templateData>";
 
